@@ -1,0 +1,2 @@
+112|Infusion Pump|Emergency|Life Support|Working
+118|Portable Oxygen Concentrator|Emergency|Life Support|Working

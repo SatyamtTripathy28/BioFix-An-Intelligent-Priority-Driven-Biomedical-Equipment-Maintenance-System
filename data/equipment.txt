@@ -1,0 +1,18 @@
+101|X-Ray Machine|Radiology|Imaging|Working
+102|CT Scanner|Radiology|Imaging|Working
+103|MRI Machine|Radiology|Imaging|Under Maintenance
+104|Ventilator|ICU|Life Support|Working
+105|Patient Monitor|ICU|Diagnostic|Working
+106|ECG Machine|Cardiology|Diagnostic|Working
+107|Defibrillator|Cardiology|Life Support|Working
+108|Anaesthesia Machine|Operation Theatre|Life Support|Working
+109|Surgical Monitor|Operation Theatre|Diagnostic|Working
+110|Blood Analyzer|Laboratory|Diagnostic|Working
+111|Microscope|Laboratory|Diagnostic|Working
+112|Infusion Pump|Emergency|Life Support|Working
+113|Ultrasound Machine|Radiology|Imaging|Working
+114|Syringe Pump|ICU|Life Support|Working
+115|Holter Monitor|Cardiology|Diagnostic|Working
+116|Operating Table|Operation Theatre|Life Support|Working
+117|Hemoglobin Analyzer|Laboratory|Diagnostic|Working
+118|Portable Oxygen Concentrator|Emergency|Life Support|Working

@@ -1,0 +1,4 @@
+101|X-Ray Machine|Radiology|Imaging|Working
+102|CT Scanner|Radiology|Imaging|Working
+103|MRI Machine|Radiology|Imaging|Under Maintenance
+113|Ultrasound Machine|Radiology|Imaging|Working

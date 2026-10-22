@@ -15,4 +15,3 @@
 115|Holter Monitor|Cardiology|Diagnostic|Working
 116|Operating Table|Operation Theatre|Life Support|Working
 117|Hemoglobin Analyzer|Laboratory|Diagnostic|Working
-118|Portable Oxygen Concentrator|Emergency|Life Support|Working

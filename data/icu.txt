@@ -1,0 +1,3 @@
+104|Ventilator|ICU|Life Support|Working
+105|Patient Monitor|ICU|Diagnostic|Working
+114|Syringe Pump|ICU|Life Support|Working

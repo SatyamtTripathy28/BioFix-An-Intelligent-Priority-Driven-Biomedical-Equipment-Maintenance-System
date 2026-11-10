@@ -1,3 +1,0 @@
-106|ECG Machine|Cardiology|Diagnostic|Working
-107|Defibrillator|Cardiology|Life Support|Working
-115|Holter Monitor|Cardiology|Diagnostic|Working

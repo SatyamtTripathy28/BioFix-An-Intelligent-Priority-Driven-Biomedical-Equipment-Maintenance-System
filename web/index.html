@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioFix</title>
+<script>
+  // Use the saved theme; the first time, follow the computer's setting.
+  (function () {
+    let theme = null;
+    try { theme = localStorage.getItem("biofix-theme"); } catch (e) {}
+    if (theme !== "light" && theme !== "dark")
+      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5f6b7a;
+    --border: #dfe3e8; --accent: #2563eb; --on-accent: #ffffff; --on-bad: #ffffff;
+    --ok: #15803d; --ok-bg: #e5f5ea; --warn: #a16207; --warn-bg: #fdf3d8;
+    --bad: #b91c1c; --bad-bg: #fde8e8; --gray-bg: #eef0f3;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    /* Neutral greys only: no blue in dark mode */
+    --bg: #121212; --card: #1c1c1c; --text: #e8e8e8; --muted: #a3a3a3;
+    --border: #2e2e2e; --accent: #e8e8e8; --on-accent: #121212; --on-bad: #121212;
+    --ok: #6cd38d; --ok-bg: #173323; --warn: #f0c35a; --warn-bg: #3a2f12;
+    --bad: #ff8a8a; --bad-bg: #3d1c1c; --gray-bg: #2a2a2a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+         background: var(--bg); color: var(--text); font-size: 15px; }
+  header { display: flex; align-items: center; gap: 20px; padding: 12px 24px;
+           background: var(--card); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  header h1 { font-size: 20px; margin: 0; color: var(--accent); }
+  nav button { background: none; border: none; padding: 6px 2px; margin-right: 14px;
+               font-size: 15px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 24px 40px; }
+  section { display: none; }
+  section.active { display: block; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .card .label { color: var(--muted); font-size: 13px; }
+  .card .value { font-size: 28px; font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+  .table-wrap { overflow-x: auto; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+  .Working { background: var(--ok-bg); color: var(--ok); }
+  .Under { background: var(--warn-bg); color: var(--warn); }
+  .Unavailable { background: var(--bad-bg); color: var(--bad); }
+  .p1 { background: var(--bad-bg); color: var(--bad); }
+  .p2 { background: var(--warn-bg); color: var(--warn); }
+  .p3 { background: var(--gray-bg); color: var(--muted); }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  input, select, button.btn { font: inherit; padding: 7px 10px; border-radius: 8px;
+         border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  button.btn { cursor: pointer; }
+  button.btn:hover { background: var(--gray-bg); }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  button.primary:hover { background: var(--accent); opacity: 0.9; }
+  button.small { padding: 3px 8px; font-size: 13px; }
+  form.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  form.row label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
+  .bar { height: 8px; background: var(--gray-bg); border-radius: 4px; }
+  .bar div { height: 8px; background: var(--accent); border-radius: 4px; }
+  .muted { color: var(--muted); }
+  .header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .bell-wrap { position: relative; }
+  #bell { position: relative; display: flex; align-items: center; padding: 7px 9px; }
+  #bell svg { width: 20px; height: 20px; }
+  #bell-count { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px;
+                border-radius: 9px; background: var(--bad); color: var(--on-bad); font-size: 11px;
+                line-height: 18px; text-align: center; font-weight: 600; }
+  #notif-panel { display: none; position: absolute; right: 0; top: calc(100% + 8px); z-index: 20;
+                 width: 370px; max-width: calc(100vw - 32px); max-height: 440px; overflow-y: auto;
+                 background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+  #notif-panel.open { display: block; }
+  .notif-head { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+                padding: 10px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
+  .notif-head select { padding: 4px 6px; font-size: 13px; }
+  .notif-item { display: block; width: 100%; text-align: left; background: none; border: none;
+                border-bottom: 1px solid var(--border); padding: 10px 12px; color: var(--text);
+                font: inherit; font-size: 14px; cursor: pointer; }
+  .notif-item:hover { background: var(--gray-bg); }
+  .notif-item .when { font-size: 12px; margin-bottom: 3px; }
+  .due-over { color: var(--bad); font-weight: 600; }
+  .due-today { color: var(--warn); font-weight: 600; }
+  .due-soon { color: var(--muted); }
+  .pin { font-size: 12px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text); }
+  button.btn:disabled { opacity: 0.35; cursor: default; }
+  tr.pinned-row td { background: var(--gray-bg); }
+  input, select, button { accent-color: var(--accent); }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #message { position: fixed; right: 20px; bottom: 20px; max-width: 360px; padding: 12px 16px;
+             border-radius: 10px; display: none; white-space: pre-line; border: 1px solid var(--border); }
+  #message.ok { display: block; background: var(--ok-bg); color: var(--ok); }
+  #message.bad { display: block; background: var(--bad-bg); color: var(--bad); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BioFix</h1>
+  <nav>
+    <button data-page="dashboard" class="active">Dashboard</button>
+    <button data-page="equipment">Equipment</button>
+    <button data-page="maintenance">Maintenance</button>
+    <button data-page="history">History</button>
+    <button data-page="reports">Reports</button>
+  </nav>
+  <div class="header-right">
+    <div class="bell-wrap">
+      <button class="btn" id="bell" type="button" aria-label="Notifications" aria-expanded="false" title="Maintenance by date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+        <span id="bell-count" hidden></span>
+      </button>
+      <div id="notif-panel" role="dialog" aria-label="Maintenance by date">
+        <div class="notif-head">
+          <b>Maintenance by date</b>
+          <select id="notif-days" aria-label="How far ahead">
+            <option value="3">Next 3 days</option>
+            <option value="7">Next 7 days</option>
+            <option value="14">Next 14 days</option>
+            <option value="30">Next 30 days</option>
+          </select>
+        </div>
+        <div id="notif-list"></div>
+      </div>
+    </div>
+    <button class="btn" id="theme-toggle" type="button"></button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <section id="dashboard" class="active">
+    <div class="cards">
+      <div class="card"><div class="label">Machines</div><div class="value" id="c-machines">-</div></div>
+      <div class="card"><div class="label">Working</div><div class="value" id="c-working" style="color:var(--ok)">-</div></div>
+      <div class="card"><div class="label">Waiting repairs</div><div class="value" id="c-waiting" style="color:var(--warn)">-</div></div>
+      <div class="card"><div class="label">Urgent (P1)</div><div class="value" id="c-urgent" style="color:var(--bad)">-</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Next repairs (most urgent first)</h2>
+        <div class="table-wrap"><table><tbody id="dash-queue"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <h2>Most downtime</h2>
+        <div id="dash-ranking"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== EQUIPMENT ==================== -->
+  <section id="equipment">
+    <div class="panel">
+      <div class="toolbar">
+        <input id="search" placeholder="Search name, ID, department, type or status" style="flex:1; min-width:220px">
+        <select id="dept-filter"><option value="">All departments</option></select>
+        <label class="muted"><input type="checkbox" id="sort-name"> Sort by name</label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Type</th><th>Status</th><th></th></tr></thead>
+          <tbody id="equip-rows"></tbody>
+        </table>
+      </div>
+      <p class="muted" id="equip-count"></p>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Find by ID (hash table)</h2>
+        <form class="row" id="find-form">
+          <label>Equipment ID<input name="id" inputmode="numeric" required></label>
+          <button class="btn">Find</button>
+        </form>
+        <p id="find-result" class="muted"></p>
+      </div>
+
+      <div class="panel">
+        <h2 id="form-title">Add equipment</h2>
+        <form class="row" id="equip-form">
+          <input type="hidden" name="mode" value="add">
+          <label>ID<input name="id" inputmode="numeric" required style="width:90px"></label>
+          <label>Name<input name="name" maxlength="60" required></label>
+          <label>Department<select name="department" class="dept-select"></select></label>
+          <label id="type-label">Type
+            <select name="type">
+              <option>Life Support</option><option>Imaging</option><option>Diagnostic</option>
+            </select>
+          </label>
+          <label>Status
+            <select name="status"></select>
+          </label>
+          <p class="muted" id="status-hint" style="flex-basis:100%; margin:0; font-size:13px"></p>
+          <button class="btn primary" id="equip-submit">Add</button>
+          <button class="btn" type="button" id="equip-cancel" style="display:none">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MAINTENANCE ==================== -->
+  <section id="maintenance">
+    <div class="grid2">
+      <div class="panel">
+        <h2>Schedule maintenance</h2>
+        <form class="row" id="schedule-form">
+          <label>Equipment ID<input name="id" inputmode="numeric" required style="width:110px"></label>
+          <label>Date<input name="date" type="date" required></label>
+          <label>Description<input name="description" maxlength="60" required></label>
+          <label>Priority<select name="priority">
+            <option value="auto">Auto (from machine type)</option>
+            <option value="1">P1 Urgent</option>
+            <option value="2">P2 High</option>
+            <option value="3">P3 Normal</option>
+          </select></label>
+          <button class="btn primary">Schedule</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Process next request</h2>
+        <p id="next-request" class="muted"></p>
+        <form class="row" id="process-form">
+          <label>Completion date<input name="completed" type="date" required></label>
+          <button class="btn primary">Complete</button>
+        </form>
+      </div>
+    </div>
+    <div class="panel" id="complete-request-panel" style="display:none">
+      <h2 id="complete-request-title">Complete request</h2>
+      <form class="row" id="complete-request-form">
+        <input type="hidden" name="requestId">
+        <label>Completion date<input name="completed" type="date" required></label>
+        <button class="btn primary">Complete</button>
+        <button class="btn" type="button" id="complete-request-close">Close</button>
+      </form>
+    </div>
+    <div class="panel" id="edit-request-panel" style="display:none">
+      <h2 id="edit-request-title">Edit request</h2>
+      <form class="row" id="edit-request-form">
+        <input type="hidden" name="requestId">
+        <label>Date<input name="date" type="date" required></label>
+        <label>Description<input name="description" maxlength="60" required></label>
+        <label>Priority<select name="priority">
+          <option value="auto">Auto (from machine type)</option>
+            <option value="1">P1 Urgent</option>
+            <option value="2">P2 High</option>
+            <option value="3">P3 Normal</option>
+        </select></label>
+        <button class="btn primary">Save</button>
+        <button class="btn" type="button" id="edit-request-cancel">Close</button>
+      </form>
+    </div>
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap">
+        <h2 style="margin:0">Maintenance queue</h2>
+        <button class="btn small" type="button" id="reset-order" title="Put every request back in the normal priority order">Reset order</button>
+      </div>
+      <p class="muted" style="margin-top:-6px">Order: priority, then earlier date, then request number. By default the priority comes from the machine type (Life Support P1, Imaging P2, Diagnostic P3) and can be changed with Edit. A P3 request that is 7 or more days overdue is moved up to P2 ("aged"). Use Done to complete any request, not only the top one. Pin puts a request at the top; the arrows change the order of the pinned requests, and Unpin puts one back. New requests still follow the normal priority order below the pinned ones.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Req</th><th>Priority</th><th>ID</th><th>Machine</th><th>Date</th><th>Description</th><th></th></tr></thead>
+          <tbody id="queue-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== HISTORY ==================== -->
+  <section id="history">
+    <div class="panel">
+      <h2>Repair history of a machine</h2>
+      <form class="row" id="history-form">
+        <label>Equipment ID<input name="id" inputmode="numeric" required></label>
+        <button class="btn">Show</button>
+      </form>
+      <p id="history-title"></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Requested</th><th>Completed</th><th>Days</th><th>Description</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REPORTS ==================== -->
+  <section id="reports">
+    <div class="panel">
+      <h2>Downtime ranking</h2>
+      <p class="muted">Total days each machine was out of service, from the repair history.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rank</th><th>ID</th><th>Machine</th><th>Days</th><th>Repairs</th><th style="width:35%"></th></tr></thead>
+          <tbody id="ranking-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="message"></div>
+
+<script>
+// ==================== SMALL HELPERS ====================
+
+const DEPARTMENTS = ["Radiology", "ICU", "Cardiology", "Operation Theatre", "Laboratory", "Emergency"];
+
+// Makes text safe to put inside the page (stops names like <b> being treated as HTML).
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Asks the C++ server for data (GET).
+async function getJson(url) {
+  const response = await fetch(url);
+  return response.json();
+}
+
+// Sends a form to the C++ server (POST) and shows the answer.
+async function post(url, values) {
+  const response = await fetch(url, { method: "POST", body: new URLSearchParams(values) });
+  const result = await response.json();
+  showMessage(result.message, result.ok);
+  if (result.ok) refreshAll();
+  return result.ok;
+}
+
+let messageTimer;
+function showMessage(text, ok) {
+  const box = document.getElementById("message");
+  box.textContent = text;
+  box.className = ok ? "ok" : "bad";
+  clearTimeout(messageTimer);
+  messageTimer = setTimeout(() => (box.className = ""), 4000);
+}
+
+function statusPill(status) {
+  return `<span class="pill ${esc(status.split(" ")[0])}">${esc(status)}</span>`;
+}
+
+function priorityPill(p, label) {
+  return `<span class="pill p${p}">${esc(label || "P" + p)}</span>`;
+}
+
+function today() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function formValues(form) {
+  return Object.fromEntries(new FormData(form));
+}
+
+// ==================== THEME (light or dark) ====================
+
+const themeButton = document.getElementById("theme-toggle");
+
+function showThemeButton() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  themeButton.textContent = dark ? "\u2600 Light mode" : "\u263E Dark mode";   // sun or moon
+  themeButton.title = dark ? "Switch to light mode" : "Switch to dark mode";
+}
+
+themeButton.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("biofix-theme", next); } catch (e) {}   // remember it
+  showThemeButton();
+});
+
+showThemeButton();
+
+// ==================== NOTIFICATIONS (bell) ====================
+// Shows waiting maintenance requests that are overdue, due today, or coming soon,
+// earliest date first. The C++ server filters and sorts them (insertion sort by date).
+
+const bell = document.getElementById("bell");
+const notifPanel = document.getElementById("notif-panel");
+const notifDays = document.getElementById("notif-days");
+
+try { notifDays.value = localStorage.getItem("biofix-notif-days") || "7"; } catch (e) { notifDays.value = "7"; }
+if (!notifDays.value) notifDays.value = "7";
+
+function dueLabel(daysLeft) {
+  if (daysLeft < 0) return `<span class="due-over">Overdue by ${-daysLeft} day(s)</span>`;
+  if (daysLeft === 0) return `<span class="due-today">Today</span>`;
+  return `<span class="due-soon">In ${daysLeft} day(s)</span>`;
+}
+
+async function loadNotifications() {
+  const params = new URLSearchParams({ days: notifDays.value, today: today() });
+  const data = await getJson("/api/notifications?" + params);
+
+  const badge = document.getElementById("bell-count");
+  badge.hidden = data.count === 0;
+  badge.textContent = data.count > 99 ? "99+" : data.count;
+  bell.setAttribute("aria-label", `Notifications: ${data.count} maintenance request(s) need attention`);
+
+  document.getElementById("notif-list").innerHTML = data.items.length === 0
+    ? `<p class="muted" style="padding:12px; margin:0">Nothing due in the next ${data.days} days.</p>`
+    : data.items.map(n => `
+        <button class="notif-item" type="button" onclick="openNotification(${n.requestId})">
+          <div class="when">${dueLabel(n.daysLeft)} <span class="muted">· ${esc(n.date)}</span></div>
+          <div>${priorityPill(n.priority)} <b>${esc(n.name)}</b> <span class="muted">(${n.id}) #${n.requestId}</span></div>
+          <div class="muted" style="font-size:13px">${esc(n.description)}</div>
+        </button>`).join("");
+}
+
+function setNotifPanel(open) {
+  notifPanel.classList.toggle("open", open);
+  bell.setAttribute("aria-expanded", open);
+}
+
+bell.addEventListener("click", event => {
+  event.stopPropagation();
+  const open = !notifPanel.classList.contains("open");
+  setNotifPanel(open);
+  if (open) loadNotifications();
+});
+
+notifPanel.addEventListener("click", event => event.stopPropagation());
+document.addEventListener("click", () => setNotifPanel(false));            // click outside closes it
+document.addEventListener("keydown", event => { if (event.key === "Escape") setNotifPanel(false); });
+
+notifDays.addEventListener("change", () => {
+  try { localStorage.setItem("biofix-notif-days", notifDays.value); } catch (e) {}
+  loadNotifications();
+});
+
+// Clicking a notification opens that request on the Maintenance tab.
+async function openNotification(requestId) {
+  setNotifPanel(false);
+  showPage("maintenance");
+  await loadQueue();
+  if (queueById[requestId]) startEditRequest(requestId);
+}
+
+setInterval(loadNotifications, 60000);   // check again every minute
+
+// ==================== TABS ====================
+
+document.querySelectorAll("nav button").forEach(button => {
+  button.addEventListener("click", () => showPage(button.dataset.page));
+});
+
+function showPage(page) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === page));
+}
+
+// ==================== DASHBOARD ====================
+
+async function loadDashboard() {
+  const s = await getJson("/api/summary");
+  document.getElementById("c-machines").textContent = s.machines;
+  document.getElementById("c-working").textContent = s.working;
+  document.getElementById("c-waiting").textContent = s.waiting;
+  document.getElementById("c-urgent").textContent = s.urgent;
+
+  const queue = await getJson("/api/queue");
+  document.getElementById("dash-queue").innerHTML = queue.length === 0
+    ? `<tr><td class="muted">No waiting requests.</td></tr>`
+    : queue.slice(0, 6).map(q =>
+        `<tr><td>${priorityPill(q.priority)}</td><td>${q.id}</td><td>${esc(q.name)}</td><td class="muted">${esc(q.date)}</td></tr>`
+      ).join("");
+
+  const ranking = await getJson("/api/ranking");
+  const max = ranking.length ? ranking[0].days || 1 : 1;
+  document.getElementById("dash-ranking").innerHTML = ranking.length === 0
+    ? `<p class="muted">No finished repairs yet.</p>`
+    : ranking.slice(0, 5).map(r => `
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between"><span>${esc(r.name)}</span><span class="muted">${r.days} days</span></div>
+          <div class="bar"><div style="width:${Math.round(r.days / max * 100)}%"></div></div>
+        </div>`).join("");
+}
+
+// ==================== EQUIPMENT ====================
+
+for (const select of [document.getElementById("dept-filter"), ...document.querySelectorAll(".dept-select")]) {
+  for (const d of DEPARTMENTS) select.add(new Option(d, d));
+}
+
+let searchTimer;
+document.getElementById("search").addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadEquipment, 250);   // wait until the user stops typing
+});
+document.getElementById("dept-filter").addEventListener("change", loadEquipment);
+document.getElementById("sort-name").addEventListener("change", loadEquipment);
+
+let equipmentById = {};
+
+async function loadEquipment() {
+  const params = new URLSearchParams({
+    search: document.getElementById("search").value,
+    department: document.getElementById("dept-filter").value,
+    sort: document.getElementById("sort-name").checked ? "name" : ""
+  });
+  const rows = await getJson("/api/equipment?" + params);
+
+  equipmentById = {};
+  rows.forEach(e => (equipmentById[e.id] = e));
+
+  document.getElementById("equip-rows").innerHTML = rows.map(e => `
+    <tr>
+      <td>${e.id}</td><td>${esc(e.name)}</td><td>${esc(e.department)}</td>
+      <td>${esc(e.type)}</td>
+      <td>${statusPill(e.status)}${e.waiting ? ` <span class="muted" style="font-size:12px">${e.waiting} waiting</span>` : ""}</td>
+      <td style="white-space:nowrap">
+        <button class="btn small" onclick="startEdit(${e.id})">Edit</button>
+        <button class="btn small" onclick="startSchedule(${e.id})">Repair</button>
+        <button class="btn small" onclick="removeEquipment(${e.id})">Delete</button>
+      </td>
+    </tr>`).join("");
+
+  document.getElementById("equip-count").textContent = `${rows.length} machine(s) shown`;
+}
+
+document.getElementById("find-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const id = formValues(event.target).id;
+  const response = await fetch("/api/find?id=" + encodeURIComponent(id));
+  const e = await response.json();
+  document.getElementById("find-result").innerHTML = response.ok
+    ? `${e.id}: <b>${esc(e.name)}</b>, ${esc(e.department)}, ${esc(e.type)} ${statusPill(e.status)}`
+    : esc(e.message);
+});
+
+// The same form is used to add and to edit.
+const equipForm = document.getElementById("equip-form");
+
+// Status rules (the server checks them too):
+//  - "Under Maintenance" only comes from scheduling a repair.
+//  - Changing a machine with waiting repairs to Working/Unavailable cancels them.
+function setStatusChoices(allowMaintenance, hint) {
+  const select = equipForm.status;
+  select.innerHTML = "";
+  for (const s of ["Working", "Under Maintenance", "Unavailable"])
+    if (s !== "Under Maintenance" || allowMaintenance) select.add(new Option(s, s));
+  document.getElementById("status-hint").textContent = hint;
+}
+setStatusChoices(false, "To put a machine under maintenance, schedule a repair for it.");
+
+function startEdit(id) {
+  const e = equipmentById[id];
+  equipForm.mode.value = "edit";
+  equipForm.id.value = e.id;
+  equipForm.id.readOnly = true;
+  equipForm.name.value = e.name;
+  equipForm.department.value = e.department;
+  if (e.waiting > 0)
+    setStatusChoices(true, `${e.waiting} repair request(s) waiting. Choosing Working or Unavailable will cancel them.`);
+  else
+    setStatusChoices(false, "To put this machine under maintenance, use its Repair button.");
+  equipForm.status.value = e.status === "Under Maintenance" && e.waiting === 0 ? "Working" : e.status;
+  document.getElementById("type-label").style.display = "none";   // type can't change
+  document.getElementById("form-title").textContent = `Edit ${e.name}`;
+  document.getElementById("equip-submit").textContent = "Save";
+  document.getElementById("equip-cancel").style.display = "";
+  equipForm.name.focus();
+}
+
+function resetEquipForm() {
+  equipForm.reset();
+  equipForm.mode.value = "add";
+  equipForm.id.readOnly = false;
+  document.getElementById("type-label").style.display = "";
+  document.getElementById("form-title").textContent = "Add equipment";
+  document.getElementById("equip-submit").textContent = "Add";
+  document.getElementById("equip-cancel").style.display = "none";
+  setStatusChoices(false, "To put a machine under maintenance, schedule a repair for it.");
+}
+
+document.getElementById("equip-cancel").addEventListener("click", resetEquipForm);
+
+equipForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  const values = formValues(equipForm);
+  const url = values.mode === "edit" ? "/api/equipment/update" : "/api/equipment/add";
+
+  // Ask before cancelling waiting repairs.
+  const e = equipmentById[values.id];
+  if (values.mode === "edit" && e && e.waiting > 0 && values.status !== "Under Maintenance" &&
+      !confirm(`${e.name} has ${e.waiting} waiting repair request(s). Changing the status to ${values.status} will cancel them. Continue?`))
+    return;
+
+  if (await post(url, values)) resetEquipForm();
+});
+
+async function removeEquipment(id) {
+  const e = equipmentById[id];
+  if (confirm(`Delete ${e.name} (${id})? Its waiting repair requests will also be removed.`))
+    await post("/api/equipment/delete", { id });
+}
+
+function startSchedule(id) {
+  showPage("maintenance");
+  const form = document.getElementById("schedule-form");
+  form.id.value = id;
+  form.description.focus();
+}
+
+// ==================== MAINTENANCE ====================
+
+document.getElementById("schedule-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (await post("/api/maintenance/schedule", formValues(event.target))) {
+    event.target.reset();
+    event.target.date.value = today();
+    event.target.priority.value = "auto";
+  }
+});
+
+document.getElementById("process-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  await post("/api/maintenance/process", formValues(event.target));
+});
+
+let queueById = {};
+const editRequestForm = document.getElementById("edit-request-form");
+const editRequestPanel = document.getElementById("edit-request-panel");
+
+function startEditRequest(requestId) {
+  const q = queueById[requestId];
+  editRequestForm.requestId.value = q.requestId;
+  editRequestForm.date.value = q.date;
+  editRequestForm.description.value = q.description;
+  editRequestForm.priority.value = q.manual ? String(q.basePriority) : "auto";
+  document.getElementById("edit-request-title").textContent = `Edit request #${q.requestId}: ${q.name}`;
+  completePanel.style.display = "none";
+  editRequestPanel.style.display = "";
+  editRequestForm.description.focus();
+}
+
+document.getElementById("edit-request-cancel").addEventListener("click", () => (editRequestPanel.style.display = "none"));
+
+editRequestForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (await post("/api/maintenance/update", formValues(editRequestForm)))
+    editRequestPanel.style.display = "none";
+});
+
+const completeForm = document.getElementById("complete-request-form");
+const completePanel = document.getElementById("complete-request-panel");
+
+function startCompleteRequest(requestId) {
+  const q = queueById[requestId];
+  completeForm.requestId.value = q.requestId;
+  completeForm.completed.value = today();
+  document.getElementById("complete-request-title").textContent =
+    `Complete request #${q.requestId}: ${q.name} (${q.description})`;
+  editRequestPanel.style.display = "none";
+  completePanel.style.display = "";
+  completeForm.completed.focus();
+}
+
+document.getElementById("complete-request-close").addEventListener("click", () => (completePanel.style.display = "none"));
+
+completeForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (await post("/api/maintenance/complete", formValues(completeForm)))
+    completePanel.style.display = "none";
+});
+
+// ---- manual order ----
+async function moveRequest(requestId, position) {
+  await post("/api/maintenance/position", { requestId, position });
+}
+
+async function unpinRequest(requestId) {
+  await post("/api/maintenance/unpin", { requestId });
+}
+
+document.getElementById("reset-order").addEventListener("click", async () => {
+  if (confirm("Put every request back in the normal priority order?"))
+    await post("/api/maintenance/reset-order", {});
+});
+
+async function cancelOneRequest(requestId) {
+  const q = queueById[requestId];
+  if (confirm(`Cancel request #${q.requestId} for ${q.name} (${q.description})? Nothing will be repaired.`))
+    await post("/api/maintenance/cancel", { requestId });
+}
+
+async function loadQueue() {
+  const queue = await getJson("/api/queue");
+  const pinnedCount = queue.filter(q => q.pinned).length;
+
+  document.getElementById("queue-rows").innerHTML = queue.length === 0
+    ? `<tr><td colspan="6" class="muted">Maintenance queue is empty.</td></tr>`
+    : queue.map(q => `
+        <tr${q.pinned ? ' class="pinned-row"' : ""}><td>#${q.requestId}</td><td>${priorityPill(q.priority, q.priorityLabel)}${q.pinned
+              ? ` <span class="pin" title="Position set by hand">pinned</span>` : ""}${q.aged
+              ? ` <span class="muted" style="font-size:12px" title="7 or more days overdue">aged from P${q.basePriority}</span>`
+              : q.manual ? ` <span class="muted" style="font-size:12px" title="Priority set by hand">manual</span>` : ""}</td><td>${q.id}</td>
+            <td>${esc(q.name)}</td><td>${esc(q.date)}</td><td>${esc(q.description)}</td>
+            <td style="white-space:nowrap">
+              ${q.pinned
+                ? `<button class="btn small" onclick="moveRequest(${q.requestId}, ${q.position - 1})" ${q.position === 1 ? "disabled" : ""} aria-label="Move request ${q.requestId} up" title="Move up">&uarr;</button>
+                   <button class="btn small" onclick="moveRequest(${q.requestId}, ${q.position + 1})" ${q.position === pinnedCount ? "disabled" : ""} aria-label="Move request ${q.requestId} down" title="Move down">&darr;</button>
+                   <button class="btn small" onclick="unpinRequest(${q.requestId})" title="Back to the normal priority order">Unpin</button>`
+                : `<button class="btn small" onclick="moveRequest(${q.requestId}, ${pinnedCount + 1})" title="Pin it at the top, after the other pinned requests">Pin</button>`}
+              <button class="btn small" onclick="startCompleteRequest(${q.requestId})">Done</button>
+              <button class="btn small" onclick="startEditRequest(${q.requestId})">Edit</button>
+              <button class="btn small" onclick="cancelOneRequest(${q.requestId})">Cancel</button>
+            </td></tr>`).join("");
+
+  queueById = {};
+  queue.forEach(q => (queueById[q.requestId] = q));
+
+  const next = queue[0];
+  document.getElementById("next-request").innerHTML = next
+    ? `${priorityPill(next.priority, next.priorityLabel)} <b>${esc(next.name)}</b> (${next.id}): ${esc(next.description)}, requested ${esc(next.date)}`
+    : "No waiting requests.";
+  document.querySelector("#process-form button").disabled = !next;
+}
+
+// ==================== HISTORY ====================
+
+document.getElementById("history-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const id = formValues(event.target).id;
+  const response = await fetch("/api/history?id=" + encodeURIComponent(id));
+  const h = await response.json();
+
+  if (!response.ok) {
+    document.getElementById("history-title").textContent = h.message;
+    document.getElementById("history-rows").innerHTML = "";
+    return;
+  }
+
+  document.getElementById("history-title").innerHTML =
+    `<b>${esc(h.equipment.name)}</b> (${h.equipment.id}): ${h.repairs} repair(s), total downtime ${h.totalDays} day(s)`;
+  document.getElementById("history-rows").innerHTML = h.records.length === 0
+    ? `<tr><td colspan="4" class="muted">No finished repairs yet.</td></tr>`
+    : h.records.map(r => `
+        <tr><td>${esc(r.requestDate)}</td><td>${esc(r.completedDate)}</td><td>${r.days}</td><td>${esc(r.description)}</td></tr>`).join("");
+});
+
+// ==================== REPORTS ====================
+
+async function loadRanking() {
+  const ranking = await getJson("/api/ranking");
+  const max = ranking.length ? ranking[0].days || 1 : 1;
+
+  document.getElementById("ranking-rows").innerHTML = ranking.length === 0
+    ? `<tr><td colspan="6" class="muted">No finished repairs yet.</td></tr>`
+    : ranking.map(r => `
+        <tr><td>${r.rank}</td><td>${r.id}</td><td>${esc(r.name)}</td><td>${r.days}</td><td>${r.repairs}</td>
+            <td><div class="bar"><div style="width:${Math.round(r.days / max * 100)}%"></div></div></td></tr>`).join("");
+}
+
+// ==================== START ====================
+
+function refreshAll() {
+  loadNotifications();
+  loadDashboard();
+  loadEquipment();
+  loadQueue();
+  loadRanking();
+}
+
+document.querySelector("#schedule-form [name=date]").value = today();
+document.querySelector("#process-form [name=completed]").value = today();
+refreshAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Keep Unix line endings (LF) for files that bash and make read.
+# Without this, Git on Windows may change them to CRLF, and then
+# "bash tests/run_tests.sh" fails with errors like: $'\r': command not found
+*.sh        text eol=lf
+Makefile    text eol=lf
+*.yml       text eol=lf
+
+# Source code and data: let Git handle line endings normally.
+# (BioFix removes a Windows '\r' when it reads the .txt files.)
+*.cpp       text
+*.h         text
+*.html      text
+*.md        text
+*.txt       text

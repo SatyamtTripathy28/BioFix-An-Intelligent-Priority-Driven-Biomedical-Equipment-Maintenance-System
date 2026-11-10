@@ -1,3 +1,0 @@
-108|Anaesthesia Machine|Operation Theatre|Life Support|Working
-109|Surgical Monitor|Operation Theatre|Diagnostic|Working
-116|Operating Table|Operation Theatre|Life Support|Working

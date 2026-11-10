@@ -1,3 +1,0 @@
-110|Blood Analyzer|Laboratory|Diagnostic|Working
-111|Microscope|Laboratory|Diagnostic|Working
-117|Hemoglobin Analyzer|Laboratory|Diagnostic|Working

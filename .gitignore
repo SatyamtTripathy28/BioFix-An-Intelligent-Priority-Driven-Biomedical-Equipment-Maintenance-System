@@ -1,0 +1,7 @@
+build/
+*.o
+BioFix
+BioFix.exe
+BioFixWeb
+BioFixWeb.exe
+a.out

@@ -12,5 +12,8 @@ Equipment* createEquipment(int id, string name, string department,
     if (type == "Imaging")
         return new ImagingEquipment(id, name, department, status);
 
-    return new DiagnosticEquipment(id, name, department, status);
+    if (type == "Diagnostic")
+        return new DiagnosticEquipment(id, name, department, status);
+
+    return nullptr;   // unknown type: the caller decides what to do
 }

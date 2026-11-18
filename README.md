@@ -1,21 +1,52 @@
-# BioFix v5
+# BioFix: An Intelligent Priority-Driven Biomedical Equipment Maintenance System
 
 BioFix is a command-line program, written in C++17, that keeps track of the biomedical equipment in a hospital and its maintenance. It was built for the Data Structure and Programming in C++ PBL project (Team ID DSCPP-III-2026-T173).
 
 Equipment is stored by department, can be searched and sorted, and is saved to text files so the data is still there the next time the program runs. Maintenance requests wait in a priority queue, so the most urgent repair is always done first. Finished repairs are kept in a history, and machines can be ranked by how long they were out of service.
 
-## What's new in v5
+## Problem statement and objectives
 
-**Manual order.** Staff can pin requests and put them in the order they want. Pinned requests form a group at the top of the queue, in that order, and processing takes them first. Every other request keeps the normal priority order below them, so a new emergency still goes straight after the pinned group. The priority queue itself (levels, aging, the heap) is unchanged; the order rule just checks "pinned?" first.
+Hospitals often track biomedical equipment on paper or in spreadsheets. That makes it hard to see which machines belong to which department, which ones are out of service, and which repair should be done first: a broken ventilator can end up waiting behind a routine check.
 
-- CLI: menu **18** (pin at a position, move inside the group, 0 to unpin, or request 0 to reset everything)
-- Website: **Pin** on normal rows; **up / down** and **Unpin** on pinned rows; **Reset order** above the queue
-- Saved in `maintenance.txt` (new column), so the order survives a restart; v4 files still load
+Objectives:
+
+1. Manage equipment by department, with fast lookup by ID.
+2. Serve repair requests in priority order (life-support equipment first), with priorities and order that staff can change by hand.
+3. Keep a repair history and rank machines by downtime.
+4. Save all data so it survives a restart, and keep each machine's status in agreement with the repair queue.
+5. Offer the same features in a command-line program and a local website, checked by automatic tests.
+
+## Team members
+
+| Member | Role | Main modules |
+|---|---|---|
+| Bhaskar Dev | Team lead | Equipment classes, safe input, repair history and downtime ranking, main menu, website |
+| Satyam Tripathy | Developer | Linked list, hash table, saving and loading files, equipment screens |
+| Rajat Rathore | Developer | Priority queue (min-heap), scheduling and completing repairs, manual order, notifications |
+| Keshav Aggarwal | Developer | Search and sort, automatic tests, random queue test, benchmark |
+
+Mentor: Ms. Priyanka Rastogi. Team ID: DSCPP-III-2026-T173 (Data Structure & Programming in C++, Semester III).
+
+## Technologies and tools
+
+- **Language:** C++17, using only the standard library (no external libraries)
+- **Website:** HTML, CSS and JavaScript, served by a small HTTP server written in C++ (Winsock on Windows, POSIX sockets on Linux)
+- **Data storage:** plain text files
+- **Build:** g++ (MinGW on Windows) and a Makefile
+- **Testing:** bash and curl test scripts, a random test of the priority queue, AddressSanitizer
+- **Tools:** Visual Studio Code, Git and GitHub, GitHub Actions
+
+## Current status
+
+- **Done:** every planned feature works: equipment management by department, search and sort, the priority queue with aging, priorities set by hand and a manual order, repair history, downtime ranking, notifications and the website. 141 command-line checks and 89 website checks pass.
+- **In progress:** each member is uploading their own modules to this repository; the Windows build check on GitHub Actions runs after that.
+- **Next:** a confirmation when a request is pinned above urgent ones, an audit log of changes, and safer saving of the data files.
 
 ## What's new in v4
 
 | Change | Why |
 |---|---|
+| **Manual order**: pin requests and set their order by hand (menu 18; Pin, up/down, Unpin and Reset order on the website) | Staff decide what is done first when it matters; pinned requests come first, everything else keeps the normal priority order, so new emergencies still go straight after the pinned group |
 | Priority queue is now a **binary min-heap** in an array | Adding and taking the next request are O(log n) instead of O(n); measured 76x faster at 20,000 requests |
 | **Heap sort** gives the queue in order (screens, file) | O(n log n), reuses the heap's own sift-down |
 | Same priority: **earlier date first**, then request number | An older repair isn't overtaken by a newer one of the same priority |
@@ -237,8 +268,3 @@ The workflow only works when this folder layout (`Makefile`, `src/`, `tests/`, `
 - Data is kept in plain text files, with no backup and no login.
 - Keyword search checks every record, which is fine for a hospital department but slow for very large data.
 - Downtime is counted in whole days from the request date to the completion date.
-
-## Team
-
-Bhaskar Dev (team lead), Rajat Rathore, Keshav Aggarwal, Satyam Tripathy.
-Mentor: Ms. Priyanka Rastogi.

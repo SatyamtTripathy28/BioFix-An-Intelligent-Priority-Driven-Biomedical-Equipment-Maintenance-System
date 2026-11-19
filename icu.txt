@@ -1,0 +1,9 @@
+104|Ventilator|ICU|Life Support|Working
+105|Patient Monitor|ICU|Diagnostic|Under Maintenance
+114|Syringe Pump|ICU|Life Support|Working
+124|ICU Ventilator|ICU|Life Support|Unavailable
+125|Bedside Monitor|ICU|Diagnostic|Under Maintenance
+126|Feeding Pump|ICU|Life Support|Working
+127|Blood Gas Analyzer|ICU|Diagnostic|Working
+128|Dialysis Machine|ICU|Life Support|Under Maintenance
+129|Suction Machine|ICU|Life Support|Under Maintenance

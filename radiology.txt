@@ -1,0 +1,9 @@
+101|X-Ray Machine|Radiology|Imaging|Working
+102|CT Scanner|Radiology|Imaging|Under Maintenance
+103|MRI Machine|Radiology|Imaging|Under Maintenance
+113|Ultrasound Machine|Radiology|Imaging|Under Maintenance
+119|Digital Mammography Unit|Radiology|Imaging|Working
+120|Fluoroscopy System|Radiology|Imaging|Under Maintenance
+121|C-Arm X-Ray|Radiology|Imaging|Working
+122|PET-CT Scanner|Radiology|Imaging|Working
+123|Bone Densitometer|Radiology|Diagnostic|Working

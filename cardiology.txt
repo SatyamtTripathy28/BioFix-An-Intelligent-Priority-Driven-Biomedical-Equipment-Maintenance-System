@@ -1,0 +1,8 @@
+106|ECG Machine|Cardiology|Diagnostic|Under Maintenance
+107|Defibrillator|Cardiology|Life Support|Under Maintenance
+115|Holter Monitor|Cardiology|Diagnostic|Working
+130|Echocardiography Machine|Cardiology|Imaging|Working
+131|Stress Test System|Cardiology|Diagnostic|Working
+132|Cardiac Monitor|Cardiology|Diagnostic|Working
+133|Intra-Aortic Balloon Pump|Cardiology|Life Support|Working
+134|Pacemaker Analyzer|Cardiology|Diagnostic|Working

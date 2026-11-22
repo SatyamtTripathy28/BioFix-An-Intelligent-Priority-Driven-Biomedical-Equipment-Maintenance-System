@@ -1,0 +1,74 @@
+name: BioFix tests
+
+# Runs every time someone pushes code or opens a pull request.
+on:
+  push:
+  pull_request:
+
+# The jobs only need to read the code.
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------
+  # Linux: build everything and run all the tests.
+  # ---------------------------------------------------------------
+  linux-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10           # stop if something hangs
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Build (command line + website)
+        run: make
+
+      - name: Command line tests
+        run: bash tests/run_tests.sh
+
+      - name: Website tests
+        run: bash tests/web_tests.sh
+
+      - name: Random test of the priority queue
+        run: make fuzz
+
+  # ---------------------------------------------------------------
+  # Windows: check that both programs build with MinGW g++ (like on
+  # our laptops) and start correctly. The website uses Windows
+  # networking (Winsock), so this is the only place it is tested.
+  # ---------------------------------------------------------------
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install g++, make and curl
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc make curl
+
+      - name: Build (command line + website)
+        run: make
+
+      - name: Quick check of the command line program
+        run: |
+          cd data
+          printf "2\n0\n" | ../build/BioFix.exe > out.txt
+          cat out.txt
+          grep -q "MRI Machine" out.txt
+
+      - name: Quick check of the website
+        run: |
+          ./build/BioFixWeb.exe 18080 > server.log 2>&1 &
+          PID=$!
+          sleep 3
+          curl -s http://127.0.0.1:18080/api/summary > summary.json || true
+          kill $PID || true
+          cat server.log summary.json
+          grep -q '"machines"' summary.json

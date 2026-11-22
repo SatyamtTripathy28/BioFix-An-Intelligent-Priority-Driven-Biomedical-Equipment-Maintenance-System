@@ -1,0 +1,8 @@
+112|Infusion Pump|Emergency|Life Support|Working
+118|Portable Oxygen Concentrator|Emergency|Life Support|Working
+145|Crash Cart Defibrillator|Emergency|Life Support|Working
+146|Portable Ventilator|Emergency|Life Support|Under Maintenance
+147|Portable X-Ray|Emergency|Imaging|Under Maintenance
+148|Emergency ECG Machine|Emergency|Diagnostic|Under Maintenance
+149|Point-of-Care Analyzer|Emergency|Diagnostic|Working
+150|Transport Monitor|Emergency|Diagnostic|Working

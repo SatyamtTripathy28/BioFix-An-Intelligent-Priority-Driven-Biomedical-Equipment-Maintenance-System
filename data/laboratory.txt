@@ -1,0 +1,8 @@
+110|Blood Analyzer|Laboratory|Diagnostic|Working
+111|Microscope|Laboratory|Diagnostic|Working
+117|Hemoglobin Analyzer|Laboratory|Diagnostic|Working
+140|Centrifuge|Laboratory|Diagnostic|Working
+141|Biochemistry Analyzer|Laboratory|Diagnostic|Under Maintenance
+142|PCR Machine|Laboratory|Diagnostic|Unavailable
+143|Hematology Analyzer|Laboratory|Diagnostic|Working
+144|Digital Pathology Scanner|Laboratory|Imaging|Working

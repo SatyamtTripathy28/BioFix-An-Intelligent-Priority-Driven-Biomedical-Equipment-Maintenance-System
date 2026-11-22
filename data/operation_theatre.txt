@@ -1,0 +1,8 @@
+108|Anaesthesia Machine|Operation Theatre|Life Support|Working
+109|Surgical Monitor|Operation Theatre|Diagnostic|Working
+116|Operating Table|Operation Theatre|Life Support|Working
+135|Patient Warming System|Operation Theatre|Life Support|Under Maintenance
+136|Laparoscopy Tower|Operation Theatre|Imaging|Working
+137|Surgical Microscope|Operation Theatre|Imaging|Working
+138|Anaesthesia Workstation|Operation Theatre|Life Support|Under Maintenance
+139|Pulse Oximeter|Operation Theatre|Diagnostic|Working
